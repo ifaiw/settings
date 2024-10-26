@@ -1,0 +1,18 @@
+[alias]
+	g = grep -i
+	a = add
+	c = commit
+	b = branch
+	s = status
+	d = diff
+	rb = rebase
+	cp = cherry-pick
+	recent = "!git branch --sort=-committerdate --color=always --format='%(color:reset)%(if)%(HEAD)%(then)→ %(align:26,left)%(color:bold green)%(authorname)%(color:reset)%(end) %(align:28,left)%(color:white dim)%(authordate:relative)%(color:reset)%(end) %(color:green) %(refname:short) %(else)%(color:reset)  %(align:24,left)%(color:magenta)%(authorname)%(color:reset)%(end) %(align:28,left)%(color:white dim)%(authordate:relative)%(color:reset)%(end)  %(refname:short)%(end)'"
+	ch = checkout
+	sh = show --name-only
+	l = log
+[core]
+	pager = less -iXFR
+[user]
+	name = Mattt Enss
+	email = matthew.enss@carta.com
