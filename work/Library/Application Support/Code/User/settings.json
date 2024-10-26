@@ -1,0 +1,12 @@
+{
+    "[python]": {
+        "editor.formatOnType": true
+    },
+    "workbench.editor.enablePreview": false,
+    "files.trimTrailingWhitespace": true,
+    "git.openRepositoryInParentFolders": "never",
+    "editor.detectIndentation": false,
+    "cmake.showOptionsMovedNotification": false,
+    "github.copilot.editor.enableCodeActions": false,
+    "github.copilot.editor.enableAutoCompletions": false
+}
