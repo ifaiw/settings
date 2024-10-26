@@ -1,0 +1,11 @@
+#!/bin/bash
+
+fileSearch=$1
+if [[ "${fileSearch:0:1}" == "\\" ]]; then
+    fileSearch=$fileSearch'*'
+else
+    fileSearch='*'$fileSearch'*'
+fi
+
+find . -iname "$fileSearch" 2>/dev/null
+

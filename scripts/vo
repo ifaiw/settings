@@ -1,0 +1,70 @@
+#!/bin/bash
+# Search for a file, and if a single match is found then open it in vim
+
+
+function wrongArgs {
+    echo "Usage: o <search_pattern> [-a]"
+    exit
+}
+
+lastFound=$(head -n 1 ~/scripts/gitsLastFound.info)
+
+if [[ $# < 1 ]]; then
+    if [[ $lastFound = "" ]]; then
+        wrongArgs
+    fi
+
+    vi $lastFound
+    exit
+fi
+
+echo "" > ~/scripts/gitsLastFound.info
+
+allFlag=false
+numArgs=1
+if [[ $BASH_ARGV = "-a" ]]; then
+    allFlag=true
+    numArgs=2
+fi
+
+if $allFlag && [ $numArgs != $# ]; then
+    wrongArgs
+fi
+
+fileSearch=$1
+if [[ "${fileSearch:0:1}" == "\\" ]]; then
+    fileSearch=$fileSearch'*'
+else
+    fileSearch='*'$fileSearch'*'
+fi
+
+
+fileList=$(find . -iname "$fileSearch")
+files=($fileList)
+
+# Strip out all files that end in "class"
+# to get rid of java compiled class files
+declare -a files=( ${files[@]/*\.class/} )
+declare -a files=( ${files[@]/*\/target\/*} )
+
+if [[ ( $allFlag = false ) && ( ${#files[@]} > 1 ) ]]; then
+    echo -e "[31mMultiple files found. Use -a to run on all of them[0m"
+    printf "%s\n" "${files[@]}"
+    exit
+fi
+
+if [[ ${#files[@]} = 0 ]]; then
+    echo -e "[31mNo matches found[0m"
+    exit
+fi
+
+if [[ ${#files[@]} = 1 ]]; then
+    echo ${files[0]} > ~/scripts/gitsLastFound.info
+fi
+
+# Apparently this is the best way to put the array of files back into a single string
+fileList=$(printf " %s" "${files[@]}")
+fileList=${fileList:1}
+
+vi $fileList
+

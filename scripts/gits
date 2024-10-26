@@ -1,0 +1,123 @@
+#!/bin/bash
+# Search for a file, and if a single match is found then run the specified git command on it
+
+gitCommand=$1
+
+function wrongArgs {
+    echo "Usage: gits <git_command> <search_pattern> [-a]"
+    exit
+}
+
+function swapCommand {
+    echo "swap gitCommand is $gitCommand" >> ~/scripts/log.txt
+    if   [[ $gitCommand = "ours" ]]; then
+        gitCommand='checkout --ours'
+    elif [[ $gitCommand = "theirs" ]]; then
+        gitCommand='checkout --theirs'
+    elif [[ $gitCommand = "--" ]]; then
+        gitCommand='checkout --'
+    elif [[ $gitCommand = "hd" ]]; then
+        echo "hd path" >> ~/scripts/log.txt
+        gitCommand='reset head'
+    fi
+    echo "post ifs gitCommand is $gitCommand" >> ~/scripts/log.txt
+}
+
+lastGitsFound=$(head -n 1 ~/scripts/gitsLastFound.info)
+
+if [[ $# < 2 ]]; then
+    if [[ $lastGitsFound = "" ]]; then
+        wrongArgs
+    fi
+
+    echo "only 1 arg, pre-swap gitCommand is $gitCommand" >> ~/scripts/log.txt
+    swapCommand
+    echo "post swap gitCommand is $gitCommand" >> ~/scripts/log.txt
+
+    git $gitCommand $lastGitsFound
+    exit
+fi
+
+echo "" > ~/scripts/gitsLastFound.info
+
+allFlag=false
+indexFlag=false
+index=-1
+numArgs=2
+lastIsNum=false
+
+lastArg=$BASH_ARGV
+case $lastArg in
+    ''|*[!0-9]*)	lastIsNum=false;;
+    *) 			lastIsNum=true;;
+esac
+
+if [[ ( $lastIsNum = true ) && ( $# = 3 ) ]]; then
+    indexFlag=true
+    index=$lastArg
+fi
+
+if [[ $lastArg = "-a" ]]; then
+    allFlag=true
+    numArgs=3
+fi
+
+if $allFlag && [ $numArgs != $# ]; then
+    wrongArgs
+fi
+
+fileSearch=$2
+
+echo ">1 arg, pre-swap gitCommand is $gitCommand" >> ~/scripts/log.txt
+swapCommand
+echo "post swap gitCommand is $gitCommand" >> ~/scripts/log.txt
+
+#echo "gitCommand before swap is $gitCommand"
+#echo "swap returnss"
+#echo $swapCommand $gitCommand
+#gitCommand=$swapCommand $gitCommand
+#echo "after swap, gitCommand is $gitCommand"
+
+if [[ "${fileSearch:0:1}" == "\\" ]]; then
+    fileSearch=$fileSearch'*'
+else
+    fileSearch='*'$fileSearch'*'
+fi
+
+fileList=$(find . -iname "$fileSearch")
+files=($fileList)
+
+# Strip out all files that end in "class"
+# to get rid of java compiled class files
+declare -a files=( ${files[@]/*\.class/} )
+# Get rid of files that have /target/ in their path, as Eclipse copies java files from one project into the target directory of another, though I'm not sure why.
+declare -a files=( ${files[@]/*\/target\/*} )
+# Get rid of backup files created by my find replace program
+declare -a files=( ${files[@]/*\.txt_bak/} )
+
+if [[ ( $allFlag = false ) && ( $indexFlag = false ) && ( ${#files[@]} > 1 ) ]]; then
+    echo -e "[31mMultiple files found. Use -a to run git on all of them[0m"
+    printf "%s\n" "${files[@]}"
+    exit
+fi
+
+if [[ ${#files[@]} = 0 ]]; then
+    echo -e "[31mNo matches found[0m"
+    exit
+fi
+
+if [[ ${#files[@]} = 1 ]]; then
+    echo ${files[0]} > ~/scripts/gitsLastFound.info
+fi
+
+if [[ $indexFlag = true ]]; then
+    echo ${files[$index]} > ~/scripts/gitsLastFound.info
+    fileList=${files[$index]}
+else
+    # Apparently this is the best way to put the array of files back into a single string
+    fileList=$(printf " %s" "${files[@]}")
+    fileList=${fileList:1}
+fi
+
+git $gitCommand $fileList
+
