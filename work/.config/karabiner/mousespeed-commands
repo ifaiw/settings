@@ -1,0 +1,2 @@
+defaults read -g com.apple.mouse.scaling
+karabiner defaults write -g com.apple.mouse.scaling 5
