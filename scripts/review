@@ -1,0 +1,23 @@
+#!/bin/bash
+
+branch=$(git symbolic-ref --short -q HEAD)
+
+if [ "$branch" = 'master' ] 
+then
+	if [ "$#" -ne 1 ] || [ "$1" != "-f" ]
+	then
+		echo "Current branch is master, to push must use -f"
+		exit
+	fi
+fi
+
+if [ "$branch" = 'main' ]
+then
+  if [ "$#" -ne 1 ] || [ "$1" != "-f" ]
+  then
+    echo "Current branch is main, to push must use -f"
+    exit
+  fi
+fi
+
+git push -u $1 origin $branch
